@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Axios setup
 axios.defaults.withCredentials = true;
-
+axios.defaults.baseURL = "https://insightai-backend-d7kn.onrender.com";
 const AuthContext = createContext();
 
 export function useAuth() {
