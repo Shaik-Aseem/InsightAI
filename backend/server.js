@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 5000;
 
 // Enable CORS
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: "https://insightai-wft0.onrender.com"
   credentials: true
 }));
 
@@ -100,7 +100,7 @@ function initializeTables() {
         const defaultPassword = '123456';
         const salt = bcrypt.genSaltSync(10);
         const hashedPassword = bcrypt.hashSync(defaultPassword, salt);
-        
+
         db.run(
           `INSERT INTO users (email, password, name, college, branch, photo) VALUES (?, ?, ?, ?, ?, ?)`,
           [
@@ -111,12 +111,12 @@ function initializeTables() {
             'Computer Science (AIML)',
             null
           ],
-          function(insertErr) {
+          function (insertErr) {
             if (insertErr) {
               console.error('Failed to seed default user:', insertErr);
             } else {
               console.log('Seeded default student account: student@insightai.com / 123456');
-              
+
               // Seed activity
               db.run(`INSERT INTO activities (user_id, action, details) VALUES (?, ?, ?)`, [
                 1, 'Account Registered', 'Seeded default account registration'
@@ -158,12 +158,12 @@ app.post('/api/auth/signup', (req, res) => {
     db.run(
       `INSERT INTO users (email, password, name, college, branch, photo) VALUES (?, ?, ?, ?, ?, ?)`,
       [email, hashedPassword, name, college || '', branch || '', null],
-      function(insertErr) {
+      function (insertErr) {
         if (insertErr) return res.status(500).json({ error: 'Registration failed.' });
-        
+
         const newUserId = this.lastID;
         req.session.userId = newUserId;
-        
+
         db.run(`INSERT INTO activities (user_id, action, details) VALUES (?, ?, ?)`, [
           newUserId, 'Account Registered', 'Created user profile and signed up successfully'
         ]);
@@ -232,7 +232,7 @@ app.post('/api/auth/logout', (req, res) => {
       userId, 'User Logout', 'Logged out of session'
     ]);
   }
-  
+
   req.session.destroy((err) => {
     if (err) return res.status(500).json({ error: 'Logout failed.' });
     res.clearCookie('insightai_session');
@@ -254,7 +254,7 @@ app.put('/api/profile', requireAuth, (req, res) => {
   db.run(
     `UPDATE users SET name = ?, college = ?, branch = ?, email = ?, photo = ? WHERE id = ?`,
     [name, college, branch, email, photo || null, userId],
-    function(err) {
+    function (err) {
       if (err) {
         if (err.message.includes('UNIQUE')) {
           return res.status(400).json({ error: 'Email is already taken by another account.' });
@@ -288,7 +288,7 @@ app.post('/api/datasets', requireAuth, (req, res) => {
     db.run(
       `INSERT INTO datasets (user_id, file_name, file_size, rows_count, cols_count, data_json) VALUES (?, ?, ?, ?, ?, ?)`,
       [userId, file_name, file_size || 0, rows_count || 0, cols_count || 0, data_json],
-      function(insertErr) {
+      function (insertErr) {
         if (insertErr) return res.status(500).json({ error: 'Failed to save dataset metadata.' });
 
         const newDatasetId = this.lastID;
@@ -309,7 +309,7 @@ app.post('/api/datasets', requireAuth, (req, res) => {
               db.run(
                 `DELETE FROM datasets WHERE user_id = ? AND id NOT IN (${placeholders})`,
                 [userId, ...keepIds],
-                function(deleteErr) {
+                function (deleteErr) {
                   if (!deleteErr) {
                     console.log(`Pruned old datasets for user ${userId}. Retaining only the latest 5.`);
                   }
@@ -448,7 +448,7 @@ app.post('/api/activities', requireAuth, (req, res) => {
   if (!action || !details) {
     return res.status(400).json({ error: 'Action and details are required' });
   }
-  db.run('INSERT INTO activities (user_id, action, details) VALUES (?, ?, ?)', [userId, action, details], function(err) {
+  db.run('INSERT INTO activities (user_id, action, details) VALUES (?, ?, ?)', [userId, action, details], function (err) {
     if (err) return res.status(500).json({ error: 'Failed to insert activity' });
     return res.json({ success: true });
   });
